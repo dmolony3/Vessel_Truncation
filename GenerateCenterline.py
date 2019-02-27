@@ -13,9 +13,14 @@ def EquispacedSpline(line,l):
 
 def ExtractGeometry(centerlines):
 
-    centerlines.Centerlines=EquispacedSpline(centerlines.Centerlines,0.05) 
+    #centerlines=EquispacedSpline(centerlines.Centerlines,0.05) # every 0.5mm
+    centerlineResampling=vmtkscripts.vmtkCenterlineResampling()
+    centerlineResampling.Centerlines=centerlines.Centerlines
+    centerlineResampling.Length=0.05
+    centerlineResampling.Execute()
+
     centerlineGeometry=vmtkscripts.vmtkCenterlineGeometry()
-    centerlineGeometry.Centerlines=centerlines.Centerlines
+    centerlineGeometry.Centerlines=centerlineResampling.Centerlines
     centerlineGeometry.SmoothingFactor=0.4
     centerlineGeometry.FrenetTangentArrayName='FrenetTangent'
     centerlineGeometry.FrenetNormalArrayName='FrenetNormal'
@@ -26,9 +31,8 @@ def ExtractGeometry(centerlines):
     centerlineAttributes.Centerlines=centerlineGeometry.Centerlines
     centerlineAttributes.Execute()
 
-
     branchExtractor=vmtkscripts.vmtkBranchExtractor()
-    branchExtractor.Centerlines=centerlineGeometry.Centerlines
+    branchExtractor.Centerlines=centerlineAttributes.Centerlines
     branchExtractor.GroupIdsArrayName = 'GroupIds'
     branchExtractor.RadiusArrayName='MaximumInscribedSphereRadius'
     branchExtractor.CenterlineIdsArrayName = 'CenterlineIds'

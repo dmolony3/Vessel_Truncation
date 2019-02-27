@@ -3,87 +3,87 @@ from vmtk import vmtkscripts
 from VesselTruncation import *
 import GenerateCenterline
 
-diameter=0.15
-"""fname1='/media/microway/1TB/PhaseB/Monash5/Surface/PhaseA_Monash5_RCA_clipped_sp.vtp'
-#dataReader=vtk.vtkDataReader()
-readSurface = vtk.vtkXMLPolyDataReader()
-readSurface.SetFileName(fname1)
-readSurface.Update()
-fname2='/media/microway/1TB/PhaseB/Monash5/Surface/PhaseA_Monash5_RCA_clipped_clsp.vtp'
+precomputed=0
 
-vessel=VesselTruncation()
-vessel.SetInputSurface(fname1)
-vessel.SetInputCenterlines(fname2)
-vessel.SetDiameter(diameter)
-vessel.Update()
-"""
+diameters=[0.15, 0.1]
+inputSurface='/media/microway/1TB/PhaseA/Case3/Surface2/PhaseA_LCA_3.stl'
+fname1='/media/microway/1TB/PhaseA/Case3/Surface2/PhaseA_LCA_3_sp.vtp'
+fname2='/media/microway/1TB/PhaseA/Case3/Surface2/PhaseA_LCA_3_clsp.vtp'
 
-filename='/media/microway/1TB/PhaseB/Monash5/Surface/PhaseA_Monash5_RCA.stl'
-fname1='/media/microway/1TB/PhaseB/Monash5/Surface/PhaseA_Monash5_RCA_sp.vtp'
-fname2='/media/microway/1TB/PhaseB/Monash5/Surface/PhaseA_Monash5_RCA_clsp.vtp'
-readSurface=vtk.vtkSTLReader()
-readSurface.SetFileName(filename)
-readSurface.Update()
+if precomputed == 1:
+    readSurface = vtk.vtkXMLPolyDataReader()
+    readSurface.SetinputSurface(fname1)
+    readSurface.Update()
 
-# generate centerline from unclipped centerlines file
-centerlines=vmtkscripts.vmtkCenterlines()
-centerlines.Surface=readSurface.GetOutput()
-centerlines.RadiusArrayName='MaximumInscribedSphereRadius'
-centerlines.Execute()
+    readCenterlines = vtk.vtkXMLPolyDataReader()
+    readCenterlines.SetinputSurface(fname2)
+    readCenterlines.Update()
 
-centerlines=GenerateCenterline.ExtractGeometry(centerlines)
-centerlineviewer=vmtkscripts.vmtkCenterlineViewer()
-centerlineviewer.Centerlines=centerlines.Centerlines
-centerlineviewer.CellDataArrayName='GroupIds'
-centerlineviewer.Legend=1
-centerlineviewer.Execute()
+    for diameter in diameters:
+        outputName=fname1.split('.') +str(diameter) + 'mm.vtp'
+        vessel=VesselTruncation()
+        vessel.SetInputSurface(readSurface.GetOutput())
+        vessel.SetInputCenterlines(readCenterlines.GetOutput())
+        vessel.SetDiameter(diameter)
+        vessel.Update()
+        vessel.SetOutputinputSurface(outputName)
+        vessel.Write()
+        vessel.GetVolume()
+else:
+    readSurface=vtk.vtkSTLReader()
+    readSurface.SetinputSurface(inputSurface)
+    readSurface.Update()
 
-branchClipper=vmtkscripts.vmtkBranchClipper()
-branchClipper.Centerlines=centerlines.Centerlines
-branchClipper.Surface=readSurface.GetOutput()
-branchClipper.Execute()
+    # generate centerline
+    centerlines=vmtkscripts.vmtkCenterlines()
+    centerlines.Surface=readSurface.GetOutput()
+    centerlines.RadiusArrayName='MaximumInscribedSphereRadius'
+    centerlines.Execute()
 
-surfaceWriter=vmtkscripts.vmtkSurfaceWriter()
-surfaceWriter.Surface=branchClipper.Surface
-surfaceWriter.Mode='ascii'
-surfaceWriter.OutputFileName='/media/microway/1TB/PhaseB/Monash5/Surface/PhaseA_Monash5_RCA_sp.vtp'
-surfaceWriter.Execute()
-surfaceWriter=vmtkscripts.vmtkSurfaceWriter()
-surfaceWriter.Surface=branchClipper.Centerlines
-surfaceWriter.Mode='ascii'
-surfaceWriter.OutputFileName='/media/microway/1TB/PhaseB/Monash5/Surface/PhaseA_Monash5_RCA_clsp.vtp'
-surfaceWriter.Execute()
+    centerlines=GenerateCenterline.ExtractGeometry(centerlines)
+    centerlineviewer=vmtkscripts.vmtkCenterlineViewer()
+    centerlineviewer.Centerlines=centerlines.Centerlines
+    #centerlineviewer.CellDataArrayName='GroupIds'
+    centerlineviewer.PointDataArrayName='MaximumInscribedSphereRadius'
+    centerlineviewer.Legend=1
+    centerlineviewer.Execute()
 
+    branchClipper=vmtkscripts.vmtkBranchClipper()
+    branchClipper.Centerlines=centerlines.Centerlines
+    branchClipper.Surface=readSurface.GetOutput()
+    branchClipper.Execute()
 
-vessel=VesselTruncation()
-vessel.SetInputSurface(fname1)
-vessel.SetInputCenterlines(fname2)
-vessel.SetDiameter(diameter)
-vessel.Update()
+    branchMetrics=vmtkscripts.vmtkBranchMetrics()
+    branchMetrics.Centerlines=branchClipper.Centerlines
+    branchMetrics.Surface=branchClipper.Surface
+    branchMetrics.AbscissasArrayName='Abscissas'
+    branchMetrics.ComputeAngularMetric=0
+    branchMetrics.Execute()
 
-vmtksurfaceviewer=vmtkscripts.vmtkSurfaceViewer()
-vmtksurfaceviewer.Surface=readSurface.GetOutput()
-vmtksurfaceviewer.Execute()
+    surfaceWriter=vmtkscripts.vmtkSurfaceWriter()
+    surfaceWriter.Surface=branchMetrics.Surface
+    surfaceWriter.Format='vtkxml'
+    surfaceWriter.Mode='ascii'
+    surfaceWriter.OutputinputSurface=fname1
+    surfaceWriter.Execute()
+    surfaceWriter=vmtkscripts.vmtkSurfaceWriter()
+    surfaceWriter.Format='vtkxml'
+    surfaceWriter.Surface=branchClipper.Centerlines
+    surfaceWriter.Mode='ascii'
+    surfaceWriter.OutputinputSurface=fname2
+    surfaceWriter.Execute()
+
+    for diameter in diameters:
+        outputName=fname1.split('.')+str(diameter) + 'mm.vtp'
+        vessel=VesselTruncation()
+        vessel.SetInputSurface(branchMetrics.Surface)
+        vessel.SetInputCenterlines(branchClipper.Centerlines)
+        vessel.SetDiameter(diameter)
+        vessel.SetOutputinputSurface(outputName)
+        vessel.Update()
+        vessel.Write()
+        vessel.GetVolume()
+
 vmtksurfaceviewer=vmtkscripts.vmtkSurfaceViewer()
 vmtksurfaceviewer.Surface=vessel.GetOutput()
 vmtksurfaceviewer.Execute()
-
-centerlinesTruncated=vmtkscripts.vmtkCenterlines()
-centerlinesTruncated.Surface=vessel.GetOutput()
-centerlinesTruncated.RadiusArrayName='MaximumInscribedSphereRadius'
-centerlinesTruncated.SeedSelectorName='openprofiles'
-centerlinesTruncated.Execute()
-
-centerlineviewer=vmtkscripts.vmtkCenterlineViewer()
-centerlineviewer.Centerlines=centerlinesTruncated.Centerlines
-centerlineviewer.PointDataArrayName='MaximumInscribedSphereRadius'
-centerlineviewer.Legend=1
-centerlineviewer.NumberOfColors=10
-centerlineviewer.Colormap='rainbow'
-centerlineviewer.Execute()
-
-# write surface to stl
-stlWriter=vtk.vtkSTLWriter()
-stlWriter.SetFileName('Model_clipped_volume.stl')
-stlWriter.SetInputData(vessel.GetOutput())
-stlWriter.Write()
