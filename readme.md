@@ -7,6 +7,7 @@ Specify in *measure_volume.py*
 2. Input surface filename (.stl)
 3. Output surface filename (.vtp)
 4. Output centerlines filename (.vtp)
+
 If above files have been precomputed centerlines and surface generation can be skipped by setting precompute flag=1.
 
 ## Example
