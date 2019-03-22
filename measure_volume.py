@@ -79,7 +79,7 @@ else:
     surfaceWriter.Execute()
 
     for diameter in diameters:
-        outputName=fname1.split('.')+str(diameter) + 'mm.vtp'
+        outputName=fname1.split('.')[0]+'_' + str(diameter) + 'mm.vtp'
         vessel=VesselTruncation()
         vessel.SetInputSurface(branchMetrics.Surface)
         vessel.SetInputCenterlines(branchClipper.Centerlines)
