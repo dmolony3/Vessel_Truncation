@@ -4,19 +4,24 @@ from VesselTruncation import *
 import GenerateCenterline
 
 precomputed=0
-
+"""
 diameters=[0.15, 0.1]
 inputSurface='/media/microway/1TB/PhaseA/Case3/Surface2/PhaseA_LCA_3.stl'
 fname1='/media/microway/1TB/PhaseA/Case3/Surface2/PhaseA_LCA_3_sp.vtp'
 fname2='/media/microway/1TB/PhaseA/Case3/Surface2/PhaseA_LCA_3_clsp.vtp'
+"""
+diameters = [0.18]
+inputSurface='/media/microway/UBUNTU 16_0/Data_from_comp/1_78_Aorto_coronary_iso_r1.stl'
+fname1='/media/microway/UBUNTU 16_0/Data_from_comp/1_78_Aorto_coronary_iso_r1_sp.vtp'
+fname2='/media/microway/UBUNTU 16_0/Data_from_comp/1_78_Aorto_coronary_iso_r1_clsp.vtp'
 
 if precomputed == 1:
     readSurface = vtk.vtkXMLPolyDataReader()
-    readSurface.SetinputSurface(fname1)
+    readSurface.SetFileName(fname1)
     readSurface.Update()
 
     readCenterlines = vtk.vtkXMLPolyDataReader()
-    readCenterlines.SetinputSurface(fname2)
+    readCenterlines.SetFileName(fname2)
     readCenterlines.Update()
 
     for diameter in diameters:
@@ -26,12 +31,12 @@ if precomputed == 1:
         vessel.SetInputCenterlines(readCenterlines.GetOutput())
         vessel.SetDiameter(diameter)
         vessel.Update()
-        vessel.SetOutputinputSurface(outputName)
+        vessel.SetOutputFileName(outputName)
         vessel.Write()
         vessel.GetVolume()
 else:
     readSurface=vtk.vtkSTLReader()
-    readSurface.SetinputSurface(inputSurface)
+    readSurface.SetFileName(inputSurface)
     readSurface.Update()
 
     # generate centerline
@@ -64,13 +69,13 @@ else:
     surfaceWriter.Surface=branchMetrics.Surface
     surfaceWriter.Format='vtkxml'
     surfaceWriter.Mode='ascii'
-    surfaceWriter.OutputinputSurface=fname1
+    surfaceWriter.OutputFileName=fname1
     surfaceWriter.Execute()
     surfaceWriter=vmtkscripts.vmtkSurfaceWriter()
     surfaceWriter.Format='vtkxml'
     surfaceWriter.Surface=branchClipper.Centerlines
     surfaceWriter.Mode='ascii'
-    surfaceWriter.OutputinputSurface=fname2
+    surfaceWriter.OutputFileName=fname2
     surfaceWriter.Execute()
 
     for diameter in diameters:
@@ -79,7 +84,7 @@ else:
         vessel.SetInputSurface(branchMetrics.Surface)
         vessel.SetInputCenterlines(branchClipper.Centerlines)
         vessel.SetDiameter(diameter)
-        vessel.SetOutputinputSurface(outputName)
+        vessel.SetOutputFileName(outputName)
         vessel.Update()
         vessel.Write()
         vessel.GetVolume()
